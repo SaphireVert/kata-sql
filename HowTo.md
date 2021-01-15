@@ -27,36 +27,42 @@ J'ai généré le schéma avec XXX:
 1. Les 5 premières entrées de la table `people` sont:  
    `SELECT XXX FROM XXX`
 1. Je trouve toutes les personnes dont le nom ou le prénom contient `ojo`, ma  
-   requête est:  
-   `SELECT XXX FROM XXX`
+  requête est:  
+  `SELECT * FROM people WHERE firstname OR lastname LIKE "%ojo%"`
 1. Les 5 personnes plus agées sont obtenus avec cette requête:  
-   `SELECT XXX FROM XXX`
+  `SELECT * FROM people ORDER BY birthdate ASC LIMIT 5`
 1. Les 5 personnes plus jeunes sont obtenus avec cette requête:  
-   `SELECT XXX FROM XXX`
+  `SELECT * FROM people ORDER BY birthdate DESC LIMIT 5`
 1. La requête suivante permet de trouver l'age en année de chaque personne:  
-   `SELECT XXX FROM XXX`
-1. La moyenne d'age est `NUMBER`, ma requête est:  
-   `SELECT XXX FROM XXX`
-1. Le plus long prénom est `TEXT`, ma requête est:  
-   `SELECT XXX FROM XXX`
-1. Le plus long nom de famille est `TEXT`, ma requête est:  
-  `SELECT XXX FROM XXX`
-1. La plus longue paire nom + prénom est `TEXT`, ma requête est:  
-   `SELECT XXX FROM XXX`
+  `SELECT *, TIMESTAMPDIFF(YEAR, birthdate, NOW()) AS age FROM people`
+1. La moyenne d'age est `26.1732`, ma requête est:  
+  `SELECT AVG(TIMESTAMPDIFF(YEAR, birthdate, NOW())) FROM people`
+1. Le plus long prénom est `Clementine`, ma requête est:  
+  `SELECT firstname FROM people WHERE LENGTH(firstname) = (SELECT max(LENGTH(firstname)) FROM people)`
+1. Le plus long nom de famille est `Christensen`, ma requête est:  
+  `SELECT lastname FROM people WHERE LENGTH(lastname) = (SELECT max(LENGTH(lastname)) FROM people)`
+1. Les plus longues paires nom + prénom sont `Cheyenne Pennington, Wallace Christensen, Benedict Daugherty`, ma requête est:  
+  `SELECT firstname, lastname FROM people WHERE (LENGTH(lastname) + LENGTH(firstname)) = (SELECT MAX(LENGTH(firstname) + LENGTH(lastname)) FROM people)`
+  Double vérification :
+  `SELECT *, (LENGTH(lastname) + LENGTH(firstname)) AS total FROM people ORDER BY total DESC`
 
 ### Invitations
+    `SELECT *, TIMESTAMPDIFF(YEAR, birthdate, NOW()) AS age FROM people
+    WHERE TIMESTAMPDIFF(YEAR, birthdate, NOW())>18 AND TIMESTAMPDIFF(YEAR, birthdate, NOW())<60 AND (email REGEXP '[a-zA-Z0-9_\\-\\.\\+]+@([a-zA-Z0-9_\\-]+\\.)+([a-zA-Z0-9_\\-]+)')`
 1. Pour lister tous le membres de plus de 18 ans:  
-   `SELECT XXX FROM XXX`
   a. et de moins de 60 ans:  
-     `SELECT XXX FROM XXX`
   a. qui ont une addresse email valide:  
-     `SELECT XXX FROM XXX`
-1. Pour ajoutez une colonne `age` dans le résultat de la requête:  
-   `SELECT XXX FROM XXX`
+  a. Avec une colonne `age` dans le résultat de la requête:  
+  `SELECT *, YEAR(NOW())-YEAR(birthdate) AS age FROM people
+    HAVING age>18 AND age<60 AND (email REGEXP '[a-zA-Z0-9_\\-\\.\\+]+@([a-zA-Z0-9_\\-]+\\.)+([a-zA-Z0-9_\\-]+)')`
 1. Pour générer une liste contenant `Prénom Nom <email@provider.com>;`:  
-   `SELECT XXX FROM XXX`
+    `SELECT CONCAT(firstname, lastname) AS blend
+    FROM people
+    WHERE YEAR(NOW())-YEAR(people.birthdate)>18 AND YEAR(NOW())-YEAR(people.birthdate)<60 AND (email REGEXP '[a-zA-Z0-9_\\-\\.\\+]+@([a-zA-Z0-9_\\-]+\\.)+([a-zA-Z0-9_\\-]+)')`
 1. Avec cette requête:  
-     `SELECT XXX FROM XXX`  
+     `SELECT COUNT(*)
+    FROM people
+    WHERE YEAR(NOW())-YEAR(people.birthdate)>18 AND YEAR(NOW())-YEAR(people.birthdate)<60 AND (email REGEXP '[a-zA-Z0-9_\\-\\.\\+]+@([a-zA-Z0-9_\\-]+\\.)+(ch)')`
    je peux estimer que `NUMBER` personnes habitent en Suisse.
 
 ### Countries
@@ -68,17 +74,37 @@ J'ai généré le schéma avec XXX:
 
 ### Jointure
 1. Avec cette requête:  
-     `SELECT XXX FROM XXX`  
+    `SELECT COUNT(*) FROM people
+    JOIN countries_people
+    ON countries_people.idperson=people.id
+    JOIN countries
+    ON countries.id = countries_people.idcountry
+    WHERE name_fr="Suisse"`
    je sais que `NUMBER` personnes habitent en Suisse.
 1. Avec cette requête:  
-     `SELECT XXX FROM XXX`  
+    `SELECT COUNT(*) FROM people
+    JOIN countries_people
+    ON countries_people.idperson=people.id
+    JOIN countries
+    ON countries.id = countries_people.idcountry
+    WHERE name_fr!="Suisse"`
    je sais que `NUMBER` personnes n'habitent pas en Suisse.
 1. Avec cette requête:  
-     `SELECT XXX FROM XXX`  
-   je liste (nom & prénom) des membres habitants de France, Allemagne, Italie, Autriche 
+    `SELECT CONCAT(firstname, " ", lastname) FROM people
+    JOIN countries_people
+    ON countries_people.idperson=people.id
+    JOIN countries
+    ON countries.id = countries_people.idcountry
+    WHERE name_fr REGEXP '(France|Allemagne|Italie|Autriche|Lischenchtein)'`
+   je liste (nom & prénom) des membres habitants de France, Allemagne, Italie, Autriche
    et Lischenchtein.
 1. Cette requête:  
-     `SELECT XXX FROM XXX`  
+    `SELECT COUNT(*), countries.name_fr FROM people
+    JOIN countries_people
+    ON countries_people.idperson=people.id
+    JOIN countries
+    ON countries.id = countries_people.idcountry
+    GROUP  BY countries.name_fr`
    permet de compter combien il y a de personnes par pays.
 1. Cette requête:  
      `SELECT XXX FROM XXX`  
@@ -114,3 +140,12 @@ J'ai généré le schéma avec XXX:
    `CREATE XXX`
 1. J'ai modifié la vue en y ajoutant les finances. Ma requête est:  
    `UPDATE XXX`
+
+
+
+   SELECT CONCAT(firstname, " ", lastname) FROM people
+       JOIN countries_people
+       ON countries_people.idperson=people.id
+       JOIN countries
+       ON countries.id = countries_people.idcountry
+       WHERE name_fr="France" OR name_fr="Allemagne" OR name_fr="Italie" OR name_fr="Autriche" OR name_fr="Lischenchtein"
