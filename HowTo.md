@@ -107,10 +107,10 @@ J'ai généré le schéma avec XXX:
     GROUP  BY countries.name_fr`
    permet de compter combien il y a de personnes par pays.
 1. Cette requête:  
-     `SELECT XXX FROM XXX`  
+     `SELECT name_fr FROM countries WHERE countries.id NOT IN ( SELECT countries_people.idcountry FROM countries JOIN countries_people ON countries_people.idcountry = countries.id )`
    liste les pays qui ne possèdent pas de personnes.
 1. En exécutant cette requête:  
-     `SELECT XXX FROM XXX`  
+     `SELECT XXX FROM XXX` 
    je sais que `NAME`, `NAME` et `NAME` sont liés à plusieurs pays.
 1. En exécutant cette requête:  
      `SELECT XXX FROM XXX`  
@@ -140,12 +140,3 @@ J'ai généré le schéma avec XXX:
    `CREATE XXX`
 1. J'ai modifié la vue en y ajoutant les finances. Ma requête est:  
    `UPDATE XXX`
-
-
-
-   SELECT CONCAT(firstname, " ", lastname) FROM people
-       JOIN countries_people
-       ON countries_people.idperson=people.id
-       JOIN countries
-       ON countries.id = countries_people.idcountry
-       WHERE name_fr="France" OR name_fr="Allemagne" OR name_fr="Italie" OR name_fr="Autriche" OR name_fr="Lischenchtein"
