@@ -16,16 +16,18 @@ J'ai généré le schéma avec XXX:
 
 ### Générales
 1. La table `people` contient `NUMBER` personnes, ma requête est:  
-   `SELECT XXX FROM XXX`
+   `SELECT COUNT(*) FROM people`
 1. La table `people` contient `NUMBER` doublons, ma requête est:  
-   `SELECT XXX FROM XXX`
+   `SELECT COUNT(*) AS nbr_doublon, firstname, lastname FROM people GROUP BY firstname, lastname HAVING COUNT(*) > 1`
 1. Cette requête permet de trouver les infos de la personne dont le nom de
    famille est "Warren" ?
-   `SELECT XXX FROM XXX`
+   `SELECT firstname, lastname, email, birthdate, idnumber FROM people WHERE people.lastname = "Warren" GROUP BY firstname, lastname`
 1. La table `people` est triée par nom de famille, ma requête est:  
-   `SELECT XXX FROM XXX`
+   `SELECT   firstname, lastname, email, birthdate, idnumber
+    FROM     people
+    ORDER BY lastname ASC`
 1. Les 5 premières entrées de la table `people` sont:  
-   `SELECT XXX FROM XXX`
+   `SELECT * FROM people LIMIT 5`
 1. Je trouve toutes les personnes dont le nom ou le prénom contient `ojo`, ma  
   requête est:  
   `SELECT * FROM people WHERE firstname OR lastname LIKE "%ojo%"`
@@ -68,9 +70,10 @@ J'ai généré le schéma avec XXX:
 ### Countries
 1. La requête qui permet d'obtenir la liste d'options
    sous la forme: `<option value="XXX">XXX</option>` est:  
-   `SELECT XXX FROM XXX`
-1. Pour avoir la liste d'options en plusieurs langues, je procède de la manière suivante:  
-   `STRING`
+   `SELECT CONCAT("<option value=", name_fr, ">", name_fr, "</option>") FROM countries`
+1. Pour avoir la liste d'options en plusieurs langues, je procède de la manière suivante:
+`SELECT CONCAT("<option value=", name_fr, ">", name_fr, "</option>") FROM countries`
+`---------------------------`
 
 ### Jointure
 1. Avec cette requête:  
@@ -110,13 +113,20 @@ J'ai généré le schéma avec XXX:
      `SELECT name_fr FROM countries WHERE countries.id NOT IN ( SELECT countries_people.idcountry FROM countries JOIN countries_people ON countries_people.idcountry = countries.id )`
    liste les pays qui ne possèdent pas de personnes.
 1. En exécutant cette requête:  
-     `SELECT XXX FROM XXX` 
-   je sais que `NAME`, `NAME` et `NAME` sont liés à plusieurs pays.
+     `SELECT firstname FROM people WHERE (SELECT COUNT(*) FROM countries_people WHERE countries_people.idperson = people.id) > 1`
+   je sais que `DAI` et `MINERVA` sont lié(e)s à plusieurs pays.
 1. En exécutant cette requête:  
-     `SELECT XXX FROM XXX`  
+    `SELECT firstname FROM people
+    WHERE people.id = (SELECT countries_people.idperson FROM countries_people
+    WHERE countries_people.idcountry NOT IN (SELECT countries.id FROM countries))`
    je sais que `NAME` est lié à un pays qui n'existe pas dans la base.
-1. De la manière suivante:  
-     `SQL`  
+1. De la manière suivante:
+    `SELECT (COUNT(*) / (SELECT COUNT(*) FROM people) * 100) AS poucentage, countries.name_fr FROM people
+    JOIN countries_people
+    ON countries_people.idperson=people.id
+    JOIN countries
+    ON countries.id = countries_people.idcountry
+    GROUP  BY countries.name_fr`
    nous pouvons afficher le pourcentages de personnes par pays.
 
 
@@ -124,19 +134,34 @@ J'ai généré le schéma avec XXX:
 
 1. Cette requête permet d'extraire `tld` de l'adresse email et de le lier à la
    table `countries`:  
-    `SELECT XXX FROM XXX`  
+    `SELECT people.firstname, people.email, countries.tld FROM people
+    LEFT JOIN countries_people
+    ON countries_people.idperson=people.id
+    LEFT JOIN countries
+    ON countries.id = countries_people.idcountry
+    GROUP  BY countries.tld`
 1. Pour ajouter une chaine si la jointure ne retourne rien, j'ai procédé de la
    manière suivante:  
-     `STRING`
+   `SELECT people.firstname, people.email, countries.tld FROM people
+   LEFT JOIN countries_people
+   ON countries_people.idperson=people.id
+   LEFT JOIN countries
+   ON countries.id = countries_people.idcountry
+   GROUP  BY countries.tld`
 1. Avec `STRING`, nous pouvons partager le mécanisme qui extrait le `tld`.
 
 ### Vue
-1. J'ai créé une vue bien pratique contenant toutes les infomrations utiles à
+1. J'ai créé une vue bien pratique contenant toutes les informations utiles à
    un humain. Ma requête est:  
-   `CREATE XXX`
+   `SELECT people.firstname, people.lastname, people.birthdate, people.email, people.idnumber, countries.iso2, countries.iso3, countries.name_en, countries.name_fr, countries.tld
+FROM people
+   LEFT JOIN countries_people
+   ON countries_people.idperson=people.id
+   LEFT JOIN countries
+   ON countries.id = countries_people.idcountry`
 
 ### Finances
 1. J'ai créé une table pour les finances. Ma requête est:  
-   `CREATE XXX`
+   `CREATE TABLE finances ( id INT, avoir INT )`
 1. J'ai modifié la vue en y ajoutant les finances. Ma requête est:  
    `UPDATE XXX`
